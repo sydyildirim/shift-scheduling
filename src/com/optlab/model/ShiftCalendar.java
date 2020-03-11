@@ -1,4 +1,4 @@
-package com.optlab.data;
+package com.optlab.model;
 
 import java.time.DayOfWeek;
 import java.time.YearMonth;
@@ -21,8 +21,8 @@ public class ShiftCalendar {
     private void createDays(int month){
         days = new ArrayList<>();
         for (int i=0; i<yearMonth.lengthOfMonth(); i++){
-            Day newDay = new Day(i+1, Calendar.DAY_OF_WEEK);
-            days.add(newDay);
+            //Day newDay = new Day(i+1, 1/*Calendar.DAY_OF_WEEK*/);
+            //days.add(newDay);
 
         }
     }
@@ -40,5 +40,16 @@ public class ShiftCalendar {
             return false;
     }
 
+    public Calendar getCalender() {
+        return calender;
     }
+
+    public YearMonth getYearMonth() {
+        return yearMonth;
+    }
+
+    public List<Day> getDays() {
+        return days;
+    }
+}
 

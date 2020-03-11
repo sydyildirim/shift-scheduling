@@ -1,4 +1,4 @@
-package com.optlab.data;
+package com.optlab.model;
 
 import java.time.DayOfWeek;
 import java.util.Calendar;

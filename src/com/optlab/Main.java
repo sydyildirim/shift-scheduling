@@ -1,7 +1,8 @@
 package com.optlab;
 
-import com.optlab.data.Doctor;
-import com.optlab.data.ShiftCalendar;
+import com.optlab.model.Doctor;
+import com.optlab.model.ShiftCalendar;
+import com.optlab.optimization.AntColonySystem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,9 @@ public class Main {
 
         //WISHES
         //WISH OF DOCTORS
+
+        AntColonySystem antColonySystem = new AntColonySystem();
+        antColonySystem.solve();
 
     }
 }

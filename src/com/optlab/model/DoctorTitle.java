@@ -1,4 +1,4 @@
-package com.optlab.data;
+package com.optlab.model;
 
 public enum DoctorTitle {
     practitioner,

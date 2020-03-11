@@ -1,4 +1,4 @@
-package com.optlab.data;
+package com.optlab.model;
 
 import java.util.ArrayList;
 import java.util.List;

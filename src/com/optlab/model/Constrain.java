@@ -1,8 +1,6 @@
-package com.optlab.data;
+package com.optlab.model;
 
 public class Constrain {
     private Criteria criteria;
     private double criteriaCoeffient;
-    private String pirt;
-
 }
