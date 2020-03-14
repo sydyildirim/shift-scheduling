@@ -5,10 +5,11 @@ import java.util.Calendar;
 
 public class Day {
     private int day;
-    private DayOfWeek dayOfWeek;
+    private int dayOfWeek;
 
-    public Day(int day, DayOfWeek dayOfWeek){
-
+    public Day(int day, int dayOfWeek){
+        this.day = day;
+        this.dayOfWeek = dayOfWeek;
     }
 
     public int getDay() {
@@ -19,17 +20,17 @@ public class Day {
         this.day = day;
     }
 
-    public DayOfWeek getDayOfWeek() {
+    public int getDayOfWeek() {
         return dayOfWeek;
     }
 
-    public void setDayOfWeek(DayOfWeek dayOfWeek) {
+    public void setDayOfWeek(int dayOfWeek) {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public boolean isWeekday(Calendar calendar){
-        if (this.dayOfWeek == DayOfWeek.SATURDAY ||
-                this.dayOfWeek  == DayOfWeek.SUNDAY)
+    public boolean isWeekday(){
+        if (this.dayOfWeek == Calendar.SATURDAY ||
+                this.dayOfWeek  == Calendar.SUNDAY)
             return true;
         else
             return false;

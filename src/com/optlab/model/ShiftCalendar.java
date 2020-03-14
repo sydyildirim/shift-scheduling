@@ -1,6 +1,5 @@
 package com.optlab.model;
 
-import java.time.DayOfWeek;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -13,16 +12,18 @@ public class ShiftCalendar {
     private List<Day> days;
 
     public ShiftCalendar(int month){
-        this.yearMonth = YearMonth.of(Calendar.YEAR, month);
-        this.calender.set(Calendar.YEAR, month-1,1);
+        //TODO: get from calender
+        this.yearMonth = YearMonth.of(2020, month);
+        this.calender.set(2020, month-1,1);
         createDays(month);
     }
 
     private void createDays(int month){
         days = new ArrayList<>();
         for (int i=0; i<yearMonth.lengthOfMonth(); i++){
-            //Day newDay = new Day(i+1, 1/*Calendar.DAY_OF_WEEK*/);
-            //days.add(newDay);
+            calender.set(2020, yearMonth.getMonthValue()-1, i+1);
+            Day newDay = new Day(i+1, calender.get(Calendar.DAY_OF_WEEK));
+            days.add(newDay);
 
         }
     }

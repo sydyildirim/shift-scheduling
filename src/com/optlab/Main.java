@@ -17,7 +17,7 @@ public class Main {
         //Get month
         System.out.println("Please enter the month:");
         int month = in.nextInt();
-        System.out.println("You entered: "+month);
+        System.out.println("You entered: "+ month);
 
         ShiftCalendar shiftCalendar = new ShiftCalendar(month);
         shiftCalendar.printCalendar();
