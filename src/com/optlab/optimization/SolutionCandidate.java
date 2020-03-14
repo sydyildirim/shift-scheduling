@@ -24,6 +24,11 @@ public class SolutionCandidate implements Cloneable{
 
     //TODO: implement desune
     public boolean isFeasible(){
+
         return false;
+    }
+
+    public void addDoctors2Day(Day day, List<Doctor> doctors){
+        day2Doc.put(day, doctors);
     }
 }

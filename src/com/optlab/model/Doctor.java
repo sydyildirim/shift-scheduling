@@ -19,6 +19,11 @@ public class Doctor {
         this.wishList = new ArrayList<>();
     }
 
+    //calculate score if the doctor has the shift day
+    public double calculateScore4ShiftDay(Day shiftDay){
+        return 0;
+    }
+
     public DoctorTitle getTitle() {
         return title;
     }
