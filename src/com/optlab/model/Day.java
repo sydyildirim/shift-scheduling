@@ -28,7 +28,7 @@ public class Day {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public boolean isWeekday(){
+    public boolean isWeekend(){
         if (this.dayOfWeek == Calendar.SATURDAY ||
                 this.dayOfWeek  == Calendar.SUNDAY)
             return true;

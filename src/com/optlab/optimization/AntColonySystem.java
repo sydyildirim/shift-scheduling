@@ -1,11 +1,9 @@
 package com.optlab.optimization;
 
-import com.optlab.model.Day;
-import com.optlab.model.Doctor;
-import com.optlab.model.Hospital;
-import com.optlab.model.ShiftCalendar;
+import com.optlab.model.*;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 public class AntColonySystem {
@@ -69,7 +67,7 @@ public class AntColonySystem {
                         newSolutionCandidate.addDoctors2Day(day, selectedDoctors);
                     }
 
-                }while (newSolutionCandidate.isFeasible());
+                }while (isSolutionFeasible(newSolutionCandidate));
 
                 double currentScore = newSolutionCandidate.calculateScore();
                 if (bestScore <= currentScore){
@@ -94,7 +92,7 @@ public class AntColonySystem {
                         newSolutionCandidate.addDoctors2Day(day, selectedDoctors);
                     }
 
-                }while (newSolutionCandidate.isFeasible());
+                }while (isSolutionFeasible(newSolutionCandidate));
                 double currentScore = newSolutionCandidate.calculateScore();
                 if (bestScore <= currentScore){
                     bestScore = currentScore;
@@ -143,5 +141,51 @@ public class AntColonySystem {
         return doctors;
     }
 
+    private boolean isSolutionFeasible(SolutionCandidate solutionCandidate){
 
+        //Check constraints of the hospital
+        for (Constraint constraint: this.hospital.getConstraintList()) {
+            if(!checkCriteria(constraint, solutionCandidate))
+                return false;
+        }
+        //Check constraints of doctors
+        for (Doctor doctor: this.doctorList){
+            for (Constraint constraint: doctor.getConstraintList()) {
+                if(!checkCriteria(constraint, solutionCandidate, doctor))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    //TODO: Can implement way better
+    private boolean checkCriteria(Constraint constraint, SolutionCandidate solutionCandidate, Doctor doctor){
+        switch (constraint.getCriteria()){
+            case minShiftNumPerMonth:
+                return (solutionCandidate.getNumOfShiftsOfDoctor(doctor)
+                        >= constraint.getCriteriaCoefficient());
+            case minShiftNumPerWeekend:
+                return (solutionCandidate.getNumOfShiftPerWeekend(doctor)
+                        >= constraint.getCriteriaCoefficient());
+            default:
+                //TODO: add log
+                return false;
+        }
+    }
+
+    //TODO: Can implement way better
+    private boolean checkCriteria(Constraint constraint, SolutionCandidate solutionCandidate){
+        switch (constraint.getCriteria()){
+            case minNumDoctorPerShift:
+                for (Day day: this.shiftCalendar.getDays()){
+                    if (solutionCandidate.getNumOfDocOfShift(day) < constraint.getCriteriaCoefficient())
+                        return false;
+                }
+                return true;
+            default:
+                //TODO: add log
+                return false;
+        }
+    }
 }
