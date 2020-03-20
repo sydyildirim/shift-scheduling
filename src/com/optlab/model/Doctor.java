@@ -7,7 +7,7 @@ public class Doctor {
 
     private DoctorTitle title;
     private Department department;
-    private List<Constrain> constraintList;
+    private List<Constraint> constraintList;
     private List<Wish> wishList;
 
     private int shiftScore;
@@ -40,27 +40,27 @@ public class Doctor {
         this.department = department;
     }
 
-    public void addConstraintToConstraintList(Constrain constrain){
-        this.constraintList.add(constrain);
+    public void addConstraintToConstraintList(Constraint constraint){
+        this.constraintList.add(constraint);
     }
 
     public void addWishToWishList(Wish wish){
         this.wishList.add(wish);
     }
 
-    public void removeConstraintFromConstraintList(Constrain constrain){
-        this.constraintList.remove(constrain);
+    public void removeConstraintFromConstraintList(Constraint constraint){
+        this.constraintList.remove(constraint);
     }
 
     public void removeWishFromWishList(Wish wish){
         this.wishList.remove(wish);
     }
 
-    public List<Constrain> getConstraintList() {
+    public List<Constraint> getConstraintList() {
         return constraintList;
     }
 
-    public void setConstraintList(List<Constrain> constraintList) {
+    public void setConstraintList(List<Constraint> constraintList) {
         this.constraintList = constraintList;
     }
 

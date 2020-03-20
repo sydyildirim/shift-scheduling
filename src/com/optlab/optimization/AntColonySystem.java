@@ -41,7 +41,7 @@ public class AntColonySystem {
     }
 
     public void initializeParameters(int antCount, int maxNumOfIteration){
-        this.antCount = antCount;
+        //this.antCount = antCount;
         this.maxNumOfIteration = maxNumOfIteration;
     }
 
@@ -69,7 +69,7 @@ public class AntColonySystem {
                         newSolutionCandidate.addDoctors2Day(day, selectedDoctors);
                     }
 
-                }while (validSolution);
+                }while (newSolutionCandidate.isFeasible());
 
                 double currentScore = newSolutionCandidate.calculateScore();
                 if (bestScore <= currentScore){
@@ -80,7 +80,7 @@ public class AntColonySystem {
             }
         }
 
-        double init_phenemon = (shiftCalendar.getDays().size()*bestScore);
+        double init_pheromone = (shiftCalendar.getDays().size()*bestScore);
         initializePheromoneMatrix(pheromoneMatrix, shiftCalendar.getDays().size(), bestScore);
 
         for(int iteration=0; iteration<maxNumOfIteration; iteration++){
@@ -94,7 +94,7 @@ public class AntColonySystem {
                         newSolutionCandidate.addDoctors2Day(day, selectedDoctors);
                     }
 
-                }while (validSolution);
+                }while (newSolutionCandidate.isFeasible());
                 double currentScore = newSolutionCandidate.calculateScore();
                 if (bestScore <= currentScore){
                     bestScore = currentScore;
@@ -102,7 +102,7 @@ public class AntColonySystem {
                     //TODO: Consider if a local search can be implemented
                 }
 
-                localUpdatePheromoneMatrix(pheromoneMatrix, newSolutionCandidate, p1, init_phenemon);
+                localUpdatePheromoneMatrix(pheromoneMatrix, newSolutionCandidate, p1, init_pheromone);
             }
             globalUpdatePheromoneMatrix(pheromoneMatrix, bestSolution, p1);
         }

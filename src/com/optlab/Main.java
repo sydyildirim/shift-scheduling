@@ -1,7 +1,6 @@
 package com.optlab;
 
-import com.optlab.model.Doctor;
-import com.optlab.model.ShiftCalendar;
+import com.optlab.model.*;
 import com.optlab.optimization.AntColonySystem;
 
 import java.util.ArrayList;
@@ -22,6 +21,11 @@ public class Main {
         ShiftCalendar shiftCalendar = new ShiftCalendar(month);
         shiftCalendar.printCalendar();
 
+        //Create hospital
+        Hospital newHospital = new Hospital();
+        newHospital.addConstraintToConstraintList(new Constraint(Criteria.maxNumDoctorPerShift, 4)); //?
+        newHospital.addConstraintToConstraintList(new Constraint(Criteria.minNumDoctorPerShift, 1));
+
         //Get num of doctors
         System.out.println("Please enter the num of doctors:");
         int numOfDoctors = in.nextInt();
@@ -29,8 +33,14 @@ public class Main {
 
         //Create Doctors
         List<Doctor> doctorList = new ArrayList<>();
-        for (int i=0; i<=numOfDoctors; i++)
+        for (int i=0; i<=numOfDoctors; i++) {
+            Doctor newDoctor = new Doctor();
+            newDoctor.addConstraintToConstraintList(new Constraint(Criteria.maxShiftNumPerWeekend, 4));//?
+            newDoctor.addConstraintToConstraintList(new Constraint(Criteria.minShiftNumPerWeekend, 2));
+            newDoctor.addConstraintToConstraintList(new Constraint(Criteria.maxShiftNumPerMonth, 10)); //?
+            newDoctor.addConstraintToConstraintList(new Constraint(Criteria.minShiftNumPerMonth, 7));
             doctorList.add(new Doctor());
+        }
 
         //CONSTRAINTS
 
@@ -44,6 +54,8 @@ public class Main {
         //WISH OF DOCTORS
 
         AntColonySystem antColonySystem = new AntColonySystem();
+        antColonySystem.initializeAntColonySystem(doctorList, shiftCalendar, newHospital);
+        antColonySystem.initializeParameters(10, 10);
         antColonySystem.solve();
 
     }
