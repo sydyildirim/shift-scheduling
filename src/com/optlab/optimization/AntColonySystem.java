@@ -2,9 +2,7 @@ package com.optlab.optimization;
 
 import com.optlab.model.*;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 public class AntColonySystem {
 
@@ -24,8 +22,10 @@ public class AntColonySystem {
     private List<Doctor> doctorList;
     private ShiftCalendar shiftCalendar;
     private Hospital hospital;
-
     private List<Ant> antList;
+
+    //Availability Controls with HashMap
+    HashMap<Doctor, List<Day>> notAvailableDays4Doc = new HashMap<>();
 
     public void initializeAntColonySystem(List<Doctor> doctorList, ShiftCalendar shiftCalendar, Hospital hospital){
         this.doctorList = doctorList;
@@ -131,14 +131,23 @@ public class AntColonySystem {
     private List<Doctor> selectDoctors(Day shiftDay){
         List<Doctor> selectedDoctors = findFeasibleDoctors4ShiftDay(shiftDay);
         //TODO: implement desune
+
+        //Update availability of the selected doctors
+        for (Doctor doctor: selectedDoctors)
+            updateAvailability(doctor, shiftDay);
+
         return selectedDoctors;
     }
 
     private List<Doctor> findFeasibleDoctors4ShiftDay(Day shiftDay){
         List<Doctor> doctors = new ArrayList<>();
         //TODO: implement desune
-
         return doctors;
+    }
+
+    private Doctor selectRandomDoctor(){
+        Random rand = new Random();
+        return this.doctorList.get(rand.nextInt(this.doctorList.size()));
     }
 
     private boolean isSolutionFeasible(SolutionCandidate solutionCandidate){
@@ -186,6 +195,24 @@ public class AntColonySystem {
             default:
                 //TODO: add log
                 return false;
+        }
+    }
+
+    private void updateAvailability(Doctor doctor, Day shiftDay){
+        //The doctor has not been added to the availability map yet
+        if (!notAvailableDays4Doc.containsKey(doctor)){
+            List<Day> notAvailableDaysList = new ArrayList<>();
+            notAvailableDaysList.add(shiftDay);
+            notAvailableDays4Doc.put(doctor, notAvailableDaysList);
+
+        }else {
+            //If day is already added that means we need to remove that day
+            if (notAvailableDays4Doc.get(doctor).contains(shiftDay)){
+                notAvailableDays4Doc.get(doctor).remove(shiftDay);
+            //We will added the day
+            }else {
+                notAvailableDays4Doc.get(doctor).add(shiftDay);
+            }
         }
     }
 }
