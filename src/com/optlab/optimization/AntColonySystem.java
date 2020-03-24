@@ -1,8 +1,10 @@
 package com.optlab.optimization;
 
+import com.optlab.Main;
 import com.optlab.model.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AntColonySystem {
 
@@ -24,9 +26,6 @@ public class AntColonySystem {
     private Hospital hospital;
     private List<Ant> antList;
 
-    //Availability Controls with HashMap
-    HashMap<Doctor, List<Day>> notAvailableDays4Doc = new HashMap<>();
-
     public void initializeAntColonySystem(List<Doctor> doctorList, ShiftCalendar shiftCalendar, Hospital hospital){
         this.doctorList = doctorList;
         this.shiftCalendar = shiftCalendar;
@@ -35,6 +34,8 @@ public class AntColonySystem {
 
         for (int i=0; i<shiftCalendar.getDays().size()*antFactor; i++)
             antList.add(new Ant());
+
+        antCount = antList.size();
 
     }
 
@@ -52,7 +53,7 @@ public class AntColonySystem {
 
     public SolutionCandidate solve(){
 
-        double bestScore = Double.MIN_VALUE;
+        double bestScore = Double.MIN_VALUE * -1;
         SolutionCandidate bestSolution = null;
 
         //Construct Initial Solutions
@@ -60,14 +61,21 @@ public class AntColonySystem {
             //Each ant construct a solution
             for (int antIndex = 0; antIndex < antCount; antIndex++) {
                 SolutionCandidate newSolutionCandidate = new SolutionCandidate();
-                boolean validSolution = true;
                 do{
+                    Availability.getInstance().clear();
+                    newSolutionCandidate.clear();
                     for (Day day: this.shiftCalendar.getDays()) {
-                        List<Doctor> selectedDoctors = selectDoctors(day);
-                        newSolutionCandidate.addDoctors2Day(day, selectedDoctors);
+                        List<Doctor> selectedDoctors = selectDoctorsAndUpdateAvailability(newSolutionCandidate, day);
+                        newSolutionCandidate.addDay2Doctors(day, selectedDoctors);
                     }
 
-                }while (isSolutionFeasible(newSolutionCandidate));
+                    //Check doctors constraints try couple of times to meet the criteria
+                    for (int tryCount = 0; !meetCriteriaOfDoctors(newSolutionCandidate) && (tryCount < 1000); tryCount++);
+
+                }while (!isSolutionFeasible(newSolutionCandidate));
+
+                System.out.println(" isFeasible: " + isSolutionFeasible(newSolutionCandidate));
+                printSolution(newSolutionCandidate);
 
                 double currentScore = newSolutionCandidate.calculateScore();
                 if (bestScore <= currentScore){
@@ -85,11 +93,12 @@ public class AntColonySystem {
             //Each ant construct a solution
             for(int antIndex=0; antIndex<antCount; antIndex++){
                 SolutionCandidate newSolutionCandidate = new SolutionCandidate();
-                boolean validSolution = true;
                 do{
+                    Availability.getInstance().clear();
+                    newSolutionCandidate.clear();
                     for (Day day: this.shiftCalendar.getDays()) {
-                        List<Doctor> selectedDoctors = selectDoctors(day);
-                        newSolutionCandidate.addDoctors2Day(day, selectedDoctors);
+                        List<Doctor> selectedDoctors = selectDoctorsAndUpdateAvailability(newSolutionCandidate, day);
+                        newSolutionCandidate.addDay2Doctors(day, selectedDoctors);
                     }
 
                 }while (isSolutionFeasible(newSolutionCandidate));
@@ -106,6 +115,18 @@ public class AntColonySystem {
         }
 
         return bestSolution;
+    }
+
+    private void printSolution(SolutionCandidate newSolutionCandidate) {
+        System.out.println("Solution: ");
+        for (Day day: this.shiftCalendar.getDays()){
+            if (day.getDayOfWeek() == Calendar.MONDAY)
+                System.out.println("");
+            System.out.print("Day :" + day.getDay() + " Doc :");
+            for (Doctor doctor: newSolutionCandidate.getDay2Doc().get(day))
+                System.out.print(doctor.getId() + " ");
+            System.out.print(" | ");
+        }
     }
 
     private void initializePheromoneMatrix(PheromoneMatrix pheromoneMatrix, int size, double bestScore){
@@ -128,26 +149,59 @@ public class AntColonySystem {
 
     }
 
-    private List<Doctor> selectDoctors(Day shiftDay){
-        List<Doctor> selectedDoctors = findFeasibleDoctors4ShiftDay(shiftDay);
-        //TODO: implement desune
-
+    private List<Doctor> selectDoctorsAndUpdateAvailability(SolutionCandidate solutionCandidate, Day shiftDay){
+        List<Doctor> selectedDoctors = selectDoctors(solutionCandidate, shiftDay);
         //Update availability of the selected doctors
         for (Doctor doctor: selectedDoctors)
-            updateAvailability(doctor, shiftDay);
+            Availability.getInstance().updateAvailability(doctor, shiftDay);
 
         return selectedDoctors;
     }
 
+    private List<Doctor> selectDoctors(SolutionCandidate solutionCandidate, Day shiftDay){
+        List<Doctor> selectedDoctors = findFeasibleDoctors4ShiftDay(shiftDay);
+        //TODO: implement desune
+
+        //Add doctor according to the needed number of doctors of the shift day
+        int numOfNeededDoctors = (int) this.hospital.getCriteriaValueByCriteria(Criteria.minNumDoctorPerShift);
+        if (solutionCandidate.getDay2Doc().contains(shiftDay))
+            numOfNeededDoctors -= solutionCandidate.getDay2Doc().get(shiftDay).size();
+
+        //TODO: do we need something to check shift day shortages?
+        if (numOfNeededDoctors >= selectedDoctors.size()){
+            return selectedDoctors;
+
+        }else { //Remove extra doctors randomly
+            while (numOfNeededDoctors != selectedDoctors.size()){
+                selectedDoctors.remove(selectRandomDoctor(selectedDoctors));
+            }
+            return selectedDoctors;
+        }
+    }
+
     private List<Doctor> findFeasibleDoctors4ShiftDay(Day shiftDay){
         List<Doctor> doctors = new ArrayList<>();
-        //TODO: implement desune
+
+        //Look for availability
+        for (Doctor doctor: this.doctorList){
+            if (Availability.getInstance().isAvailable(doctor, shiftDay)) {
+                doctors.add(doctor);
+            }
+        }
+
         return doctors;
     }
 
     private Doctor selectRandomDoctor(){
-        Random rand = new Random();
+        //Random rand = new Random();
+        Random rand = Main.rng;
         return this.doctorList.get(rand.nextInt(this.doctorList.size()));
+    }
+
+    private Doctor selectRandomDoctor(List<Doctor> doctors){
+        //Random rand = new Random();
+        Random rand = Main.rng;
+        return doctors.get(rand.nextInt(doctors.size()));
     }
 
     private boolean isSolutionFeasible(SolutionCandidate solutionCandidate){
@@ -177,6 +231,14 @@ public class AntColonySystem {
             case minShiftNumPerWeekend:
                 return (solutionCandidate.getNumOfShiftPerWeekend(doctor)
                         >= constraint.getCriteriaCoefficient());
+            case shiftThat2DayInARow:
+                return checkShiftThat2DayInARow(solutionCandidate, doctor);
+
+                //TODO: implement
+            case maxShiftNumPerMonth:
+            case maxShiftNumPerWeekend:
+                return true;
+
             default:
                 //TODO: add log
                 return false;
@@ -192,27 +254,159 @@ public class AntColonySystem {
                         return false;
                 }
                 return true;
+            case maxNumDoctorPerShift:
+                return true;
             default:
                 //TODO: add log
                 return false;
         }
     }
 
-    private void updateAvailability(Doctor doctor, Day shiftDay){
-        //The doctor has not been added to the availability map yet
-        if (!notAvailableDays4Doc.containsKey(doctor)){
-            List<Day> notAvailableDaysList = new ArrayList<>();
-            notAvailableDaysList.add(shiftDay);
-            notAvailableDays4Doc.put(doctor, notAvailableDaysList);
-
-        }else {
-            //If day is already added that means we need to remove that day
-            if (notAvailableDays4Doc.get(doctor).contains(shiftDay)){
-                notAvailableDays4Doc.get(doctor).remove(shiftDay);
-            //We will added the day
-            }else {
-                notAvailableDays4Doc.get(doctor).add(shiftDay);
+    //TODO: Need to think a more generic way
+    private boolean meetCriteriaOfDoctors(SolutionCandidate solutionCandidate){
+        for (Doctor doctor: this.doctorList){
+            //TODO: firstly check minShiftNumPerWeekend to optimize
+            for (Constraint constraint: doctor.getConstraintList()){
+                if(!checkCriteria(constraint, solutionCandidate, doctor)){
+                    meetCriteria(constraint, solutionCandidate, doctor);
+                }
             }
         }
+
+        return isSolutionFeasible(solutionCandidate);
+    }
+
+    //TODO: Need to think a more generic way
+    private void meetCriteria(Constraint constraint, SolutionCandidate solutionCandidate, Doctor doctor){
+        List<Doctor> doctorList;
+        switch (constraint.getCriteria()){
+            case minShiftNumPerWeekend:
+                doctorList = new ArrayList<>();
+                doctorList.add(doctor);
+                solutionCandidate.addDay2Doctors(selectDayAndUpdateAvailability(doctor, true), doctorList);
+                break;
+            case minShiftNumPerMonth:
+                doctorList = new ArrayList<>();
+                doctorList.add(doctor);
+                solutionCandidate.addDay2Doctors(selectDayAndUpdateAvailability(doctor, false), doctorList);
+                break;
+            case shiftThat2DayInARow:
+                switchShiftDay(solutionCandidate, doctor);
+                break;
+        }
+    }
+
+    private boolean checkShiftThat2DayInARow(SolutionCandidate solutionCandidate, Doctor doctor){
+        if (solutionCandidate.getDoc2Day().containsKey(doctor)){
+            List<Day> shiftDays = solutionCandidate.getDoc2Day().get(doctor);
+            for (Day shiftDay: shiftDays){
+                if (shiftDays.stream().filter(day -> day.getDay() == (shiftDay.getDay()+1)).count() != 0)
+                    return false;
+                if (shiftDays.stream().filter(day -> day.getDay() == (shiftDay.getDay()-1)).count() != 0)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void switchShiftDay(SolutionCandidate solutionCandidate, Doctor doctor){
+        if (solutionCandidate.getDoc2Day().containsKey(doctor)){
+            List<Day> shiftDays = solutionCandidate.getDoc2Day().get(doctor);
+            for (Day shiftDay: shiftDays){
+                if (shiftDays.stream().filter(day -> day.getDay() == (shiftDay.getDay()+1)).count() != 0){
+                    //the shiftDay need to be switched
+                    switchShiftDaysAndUpdateAvailability(solutionCandidate,doctor,shiftDay);
+                    break;
+                }
+
+                if (shiftDays.stream().filter(day -> day.getDay() == (shiftDay.getDay()-1)).count() != 0){
+                    switchShiftDaysAndUpdateAvailability(solutionCandidate,doctor,shiftDay);
+                    break;
+                }
+
+            }
+        }
+    }
+
+    private void switchShiftDaysAndUpdateAvailability(SolutionCandidate solutionCandidate, Doctor doctor, Day previousDay){
+        Day selectedSwitchDay = findAnotherShiftDayForSwitch(solutionCandidate, doctor, previousDay);
+
+        Doctor selectedDoctor = selectRandomDoctor(solutionCandidate.getDay2Doc().get(selectedSwitchDay));
+
+        //Selected doctor for switching does not have the previous day as a shift day
+        if (!solutionCandidate.getDoc2Day().get(selectedDoctor).contains(previousDay)){
+            //Switch operation
+            solutionCandidate.getDay2Doc().get(selectedSwitchDay).remove(selectedDoctor);
+            solutionCandidate.getDay2Doc().get(previousDay).add(selectedDoctor);
+
+            solutionCandidate.getDay2Doc().get(previousDay).remove(doctor);
+            solutionCandidate.getDay2Doc().get(selectedSwitchDay).add(doctor);
+
+            solutionCandidate.getDoc2Day().get(selectedDoctor).remove(selectedSwitchDay);
+            solutionCandidate.getDoc2Day().get(selectedDoctor).add(previousDay);
+
+            solutionCandidate.getDoc2Day().get(doctor).remove(previousDay);
+            solutionCandidate.getDoc2Day().get(doctor).add(selectedSwitchDay);
+
+            //Update availability
+            //remove old
+            Availability.getInstance().updateAvailability(selectedDoctor, selectedSwitchDay);
+            Availability.getInstance().updateAvailability(doctor, previousDay);
+            //add new
+            Availability.getInstance().updateAvailability(selectedDoctor, previousDay);
+            Availability.getInstance().updateAvailability(doctor, selectedSwitchDay);
+        }
+    }
+
+    private Day findAnotherShiftDayForSwitch(SolutionCandidate solutionCandidate, Doctor doctor, Day previousDay){
+        //Consider if the day we need to switch is weekend
+        List<Day> available4SwitchDayList
+                = solutionCandidate.getDay2Doc().keySet().stream()
+                .filter(day -> (day != previousDay)
+                        && (day.getDay() != previousDay.getDay() - 1)
+                        && (day.getDay() != previousDay.getDay() + 1)
+                        && !(solutionCandidate.getDay2Doc().get(day).contains(doctor))
+                        && (day.isWeekend() == previousDay.isWeekend()))
+                .collect(Collectors.toList());
+       return selectRandomShiftDay(available4SwitchDayList);
+    }
+
+    private Day selectDayAndUpdateAvailability(Doctor doctor, boolean isWeekend){
+        Day selectedShiftDay = selectDay(doctor, isWeekend);
+        //Update availability
+        Availability.getInstance().updateAvailability(doctor, selectedShiftDay);
+
+        return selectedShiftDay;
+    }
+
+    private Day selectDay(Doctor doctor, boolean isWeekend){
+        List<Day> availableShiftDays = findFeasibleShiftDays4Doctor(doctor, isWeekend);
+
+        return selectRandomShiftDay(availableShiftDays);
+    }
+
+    private List<Day> findFeasibleShiftDays4Doctor(Doctor doctor, boolean isWeekend){
+        List<Day> shiftDays = new ArrayList<>();
+
+        List<Day> dayList;
+        if (isWeekend)
+            dayList = this.shiftCalendar.getDays().stream().filter(day -> day.isWeekend()).collect(Collectors.toList());
+        else
+            dayList = this.shiftCalendar.getDays();
+
+        //Look for availability
+        for (Day day: dayList){
+            if ( Availability.getInstance().isAvailable(doctor, day))
+                shiftDays.add(day);
+        }
+
+        return shiftDays;
+    }
+
+    private Day selectRandomShiftDay(List<Day> availableShiftDays){
+        //Random random = new Random();
+        Random random = Main.rng;
+        return availableShiftDays.get(random.nextInt(availableShiftDays.size()));
     }
 }

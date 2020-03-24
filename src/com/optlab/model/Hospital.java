@@ -44,4 +44,14 @@ public class Hospital {
     public void setWishList(List<Wish> wishList) {
         this.wishList = wishList;
     }
+
+    //TODO: Can be implemented more efficient?
+    public double getCriteriaValueByCriteria(Criteria criteria){
+        for (Constraint constraint: constraintList){
+            if (constraint.getCriteria() == criteria){
+                return constraint.getCriteriaCoefficient();
+            }
+        }
+        return 0;
+    }
 }

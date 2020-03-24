@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Doctor {
 
+    private int id;
     private DoctorTitle title;
     private Department department;
     private List<Constraint> constraintList;
@@ -94,5 +95,13 @@ public class Doctor {
 
     public void setHolidayShiftScore(int holidayShiftScore) {
         this.holidayShiftScore = holidayShiftScore;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

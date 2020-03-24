@@ -5,11 +5,18 @@ import com.optlab.optimization.AntColonySystem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
 
+    public static final Random rng = new Random();
+
     public static void main(String[] args) {
+
+        //799623108
+        //7996208
+        Main.rng.setSeed(7996208);
 
         Scanner in = new Scanner(System.in);
 
@@ -33,13 +40,15 @@ public class Main {
 
         //Create Doctors
         List<Doctor> doctorList = new ArrayList<>();
-        for (int i=0; i<=numOfDoctors; i++) {
+        for (int i=0; i<numOfDoctors; i++) {
             Doctor newDoctor = new Doctor();
+            newDoctor.setId(i);
             newDoctor.addConstraintToConstraintList(new Constraint(Criteria.maxShiftNumPerWeekend, 4));//?
             newDoctor.addConstraintToConstraintList(new Constraint(Criteria.minShiftNumPerWeekend, 2));
             newDoctor.addConstraintToConstraintList(new Constraint(Criteria.maxShiftNumPerMonth, 10)); //?
             newDoctor.addConstraintToConstraintList(new Constraint(Criteria.minShiftNumPerMonth, 7));
-            doctorList.add(new Doctor());
+            newDoctor.addConstraintToConstraintList(new Constraint(Criteria.shiftThat2DayInARow, 0));
+            doctorList.add(newDoctor);
         }
 
         //CONSTRAINTS
